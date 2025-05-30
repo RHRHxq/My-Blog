@@ -69,8 +69,4 @@ myblog:
     admin-ttl: 7200000
     # 设置前端传递过来的令牌名称
     admin-token-name: token
-#  alioss:
-#    endpoint: ${myblog.alioss.endpoint}
-#    access-key-id: ${myblog.alioss.access-key-id}
-#    access-key-secret: ${myblog.alioss.access-key-secret}
-#    bucket-name: ${myblog.alioss.bucket-name}
+  
