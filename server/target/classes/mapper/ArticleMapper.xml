@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.myblog.mapper.ArticleMapper">
+
+
+    <select id="getByUsername" resultType="com.myblog.entity.User">
+        select * from user where username = #{username}
+    </select>
+
+    <!-- 查询文章列表的方法 -->
+    <select id="getArticlesByFilterAndSort" resultType="com.myblog.vo.ArticleVO">
+        SELECT * FROM article
+        <where>
+            <!-- 如果 categoryId 不为空，添加 category_id 的筛选条件 -->
+            <if test="categoryId != null">
+                category_id = #{categoryId}
+            </if>
+            <!-- 如果 tagId 不为空，添加 tag_id 的筛选条件 -->
+            <if test="tagId != null">
+                AND tag_id = #{tagId}
+            </if>
+            <!-- 如果 publishTime 不为空，添加 publish_time 的筛选条件 -->
+            <if test="publishTime != null">
+                AND publish_time = #{publishTime}
+            </if>
+        </where>
+        <!-- 根据传入的 sortField 和 sortOrder 进行排序 -->
+        ORDER BY ${sortField} ${sortOrder}
+    </select>
+
+    <!-- 将文章移入回收站 -->
+    <update id="moveToRecycleBin">
+        UPDATE article
+        SET is_deleted = 1, delete_time = NOW()
+        WHERE id = #{id} AND user_id = #{userId}
+    </update>
+
+    <!-- 从回收站恢复文章 -->
+    <update id="restoreFromRecycleBin">
+        UPDATE article
+        SET is_deleted = 0, delete_time = NULL
+        WHERE id = #{id} AND user_id = #{userId}
+    </update>
+
+    <!-- 永久删除文章 -->
+    <delete id="permanentlyDelete">
+        DELETE FROM article
+        WHERE id = #{id} AND user_id = #{userId}
+    </delete>
+
+    <!-- 获取回收站中的文章列表 -->
+    <select id="getArticlesInRecycleBin" resultType="com.myblog.entity.Article">
+        SELECT * FROM article
+        WHERE is_deleted = 1 AND user_id = #{userId}
+    </select>
+
+    <!-- 清理超过7天的回收站文章 -->
+    <delete id="cleanExpiredRecycleBinArticles">
+        DELETE FROM article
+        WHERE is_deleted = 1 AND delete_time &lt; DATE_SUB(NOW(), INTERVAL 7 DAY)
+    </delete>
+
+    <insert id="insertCategory" parameterType="com.myblog.entity.Category">
+        INSERT INTO category (name, parent_id, sort, status, create_time)
+        VALUES (#{name}, #{parentId}, #{sort}, #{status}, NOW())
+    </insert>
+
+    <select id="getSubCategories" resultType="com.myblog.entity.Category">
+        SELECT * FROM category WHERE parent_id = #{parentId}
+    </select>
+</mapper>

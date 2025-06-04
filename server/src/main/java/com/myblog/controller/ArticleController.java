@@ -310,6 +310,23 @@ public class ArticleController {
         return Result.success("批量审核拒绝");
     }
 
+    /**
+     * 全文检索
+     */
+    @GetMapping("/search")
+     public Result<List<ArticleVO>> search(@RequestParam String keyword) {
+        List<ArticleVO> articles = articleService.searchArticles(keyword);
+        return Result.success(articles);
+    }
+
+    // 获取推荐文章
+    @GetMapping("/recommend/{articleId}/{numRecommendations}")
+    public Result<List<Article>> getRecommendedArticles(@PathVariable Long articleId, @PathVariable int numRecommendations) {
+        List<Article> recommendedArticles = articleService.recommendArticles(articleId, numRecommendations);
+        return Result.success(recommendedArticles);
+    }
+
+
 }
 
  

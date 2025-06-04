@@ -1,5 +1,6 @@
 package com.myblog.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.myblog.dto.SystemMessageDTO;
 import com.myblog.entity.Article;
 import com.myblog.entity.Category;
@@ -7,24 +8,36 @@ import com.myblog.entity.ReviewNotification;
 import com.myblog.entity.SystemMessage;
 import com.myblog.mapper.ArticleMapper;
 import com.myblog.mapper.UserMapper;
+import com.myblog.recommend.ContentBasedArticleRecommender;
 import com.myblog.service.ArticleService;
 import com.myblog.vo.ArticleVO;
 import com.myblog.vo.CategoryVO;
 import com.myblog.vo.PendingVO;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.sql.Date;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -45,6 +58,9 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    
+    @Autowired
+    private RestHighLevelClient elasticsearchClient;
 //    @Value("${queue.article_submission}")
 //    private String submissionQueue;
 
@@ -65,13 +81,42 @@ public class ArticleServiceImpl implements ArticleService {
     public void insertArticle(Article article) {
         log.info("插入文章：{}", article);
         articleMapper.insert(article);
+        syncArticleToElasticsearch(article);
+    }
 
+    private void syncArticleToElasticsearch(Article article) {
+        Map<String, Object> jsonMap = new HashMap<>();
+        jsonMap.put("id", article.getId());
+        jsonMap.put("title", article.getTitle());
+        jsonMap.put("content", article.getContent());
+        // 添加其他需要同步的字段
+
+        IndexRequest indexRequest = new IndexRequest("articles")
+                .id(article.getId().toString())
+                .source(jsonMap, XContentType.JSON);
+
+        try {
+            IndexResponse indexResponse = elasticsearchClient.index(indexRequest, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void deleteArticle(Long id, Long userId) {
         log.info("删除文章：id={}, userId={}", id, userId);
         articleMapper.deleteByIdAndUserId(id, userId);
+        deleteArticleFromElasticsearch(id);
     }
+
+    private void deleteArticleFromElasticsearch(Long id) {
+        DeleteRequest deleteRequest = new DeleteRequest("articles", id.toString());
+        try {
+            DeleteResponse deleteResponse = elasticsearchClient.delete(deleteRequest, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public void updateArticle(Article article) {
         log.info("更新文章：{}", article);
@@ -332,4 +377,38 @@ public class ArticleServiceImpl implements ArticleService {
 //
 //    }
 
+
+     public List<ArticleVO> searchArticles(String keyword) {
+         SearchRequest searchRequest = new SearchRequest("articles");
+         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+         searchSourceBuilder.query(QueryBuilders.multiMatchQuery(keyword, "title", "content"));
+         searchRequest.source(searchSourceBuilder);
+
+         try {
+             SearchResponse searchResponse = elasticsearchClient.search(searchRequest, RequestOptions.DEFAULT);
+             SearchHit[] searchHits = searchResponse.getHits().getHits();
+             List<ArticleVO> articles = new ArrayList<>();
+
+             for (SearchHit hit : searchHits) {
+                 Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+                 ArticleVO article = new ArticleVO();
+                 article.setId(Long.parseLong(sourceAsMap.get("id").toString()));
+                 article.setTitle((String) sourceAsMap.get("title"));
+                 article.setContent((String) sourceAsMap.get("content"));
+                 // 设置其他字段
+                 articles.add(article);
+             }
+
+             return articles;
+         } catch (IOException e) {
+             e.printStackTrace();
+             return new ArrayList<>();
+         }
+    }
+
+    @Autowired
+    private ContentBasedArticleRecommender recommender;
+    public List<Article> recommendArticles(Long articleId, int numRecommendations) {
+        return recommender.recommendArticles(articleId, numRecommendations);
+    }
 }

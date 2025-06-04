@@ -35,6 +35,7 @@
 		<redis>2.7.3</redis>
 		<rabbit>2.4.6</rabbit>
 		<jackson.databind>2.9.8</jackson.databind>
+		<elasticsearch.version>7.12.1</elasticsearch.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>

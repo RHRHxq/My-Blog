@@ -1,0 +1,24 @@
+myblog:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    host: localhost
+    port: 3306
+    database: myblog
+    username: root
+    password: 1234
+  alioss:
+    endpoint: oss-cn-beijing.aliyuncs.com
+    access-key-id: LTAI5tHgYVjRCSsNeAtJVuRa
+    access-key-secret: AXEgsYEkvG456NLdwPalFJOGqHUJGy
+    bucket-name: myblog-wx
+  redis:
+    host: localhost
+    port: 6379
+    password: 123456
+    database: 0
+  rabbitmq:
+    host: 192.168.209.130
+    port: 5672
+    virtual-host: /myblog
+    username: myblog
+    password: 123

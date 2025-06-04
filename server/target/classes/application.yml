@@ -1,0 +1,76 @@
+server:
+  port: 8080
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  profiles:
+    active: dev
+  main:
+    allow-circular-references: true
+  datasource:
+    druid:
+      driver-class-name: ${myblog.datasource.driver-class-name}
+      url: jdbc:mysql://${myblog.datasource.host}:${myblog.datasource.port}/${myblog.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+      username: ${myblog.datasource.username}
+      password: ${myblog.datasource.password}
+  redis:
+    host: ${myblog.redis.host}
+    port: ${myblog.redis.port}
+    password: ${myblog.redis.password}
+    database: ${myblog.redis.database}
+  rabbitmq:
+    host: ${myblog.rabbitmq.host}
+    port: ${myblog.rabbitmq.port}
+    virtual-host: ${myblog.rabbitmq.virtual-host}
+    username: ${myblog.rabbitmq.username}
+    password: ${myblog.rabbitmq.password}
+
+#  security:
+#    oauth2:
+#      client:
+#        registration:
+#          github:
+#            client-id: Ov23liaF4dVjzYMWaVKw
+#            client-secret: c145d988901cb4b617a9ebd381ec0aa64f2575f6
+#            scope: read:user, user:email
+#            redirect-uri: "{baseUrl}/login/oauth2/code/github"
+#            authorization-grant-type: authorization_code
+#            client-name: GitHub
+#        provider:
+#          github:
+#            authorization-uri: https://github.com/login/oauth/authorize
+#            token-uri: https://github.com/login/oauth/access_token
+#            user-info-uri: https://api.github.com/user
+#            user-name-attribute: login
+mybatis:
+  #mapper配置文件
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.myblog.entity
+  configuration:
+    #开启驼峰命名
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    com:
+      sky:
+        mapper: debug
+        service: info
+        controller: info
+
+myblog:
+  jwt:
+    # 设置jwt签名加密时使用的秘钥
+    admin-secret-key: itcast
+    # 设置jwt过期时间
+    admin-ttl: 7200000
+    # 设置前端传递过来的令牌名称
+    admin-token-name: token
+  alioss:
+    endpoint: ${myblog.alioss.endpoint}
+    access-key-id: ${myblog.alioss.access-key-id}
+    access-key-secret: ${myblog.alioss.access-key-secret}
+    bucket-name: ${myblog.alioss.bucket-name}

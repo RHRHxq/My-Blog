@@ -93,5 +93,9 @@ public interface ArticleService {
 
     void batchReviewArticles(List<Long> articleIds, int i);
 
+    List<ArticleVO> searchArticles(String keyword);
+
+    List<Article> recommendArticles(Long articleId, int numRecommendations);
+
 //    void rejectArticle(Long id,  int i);
 }
