@@ -1,5 +1,6 @@
 package com.myblog.controller;
 
+import cn.hutool.db.Session;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -47,7 +49,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/login")
-    public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO) {
+    public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO, HttpServletRequest request) {
         log.info("用户登录：{}", userLoginDTO);
 
         User user = userService.login(userLoginDTO);
@@ -73,11 +75,13 @@ public class UserController {
 
         userLoginVO.setReminder(userService.getUnreadSystemMessageByUserId(user.getId()));
 
+        HttpSession session = request.getSession();
+        session.setAttribute("userId", user.getId());
         return Result.success(userLoginVO);
     }
 
     @GetMapping("/login/github/callback")
-    public void getCode(String code) throws JsonProcessingException {
+    public void getCode(String code,HttpServletRequest request) throws JsonProcessingException {
         log.info("获取用户信息:{}", code);
         Map<String, Object> paramMap = new HashMap<>();
         paramMap.put("client_id", "Ov23liaF4dVjzYMWaVKw");
@@ -120,10 +124,10 @@ public class UserController {
         GitHubUser gitHubUser = new ObjectMapper().readValue(userInfo, GitHubUser.class);
         if (userService.getUser(gitHubUser.getLogin()) == null) {
             userService.register(new UserRegisterDTO(gitHubUser.getLogin(), "1234"));
-            login(new UserLoginDTO(gitHubUser.getLogin(), "1234"));
+            login(new UserLoginDTO(gitHubUser.getLogin(), "1234"),request);
         }
         else {
-            login(new UserLoginDTO(gitHubUser.getLogin(), "1234"));
+            login(new UserLoginDTO(gitHubUser.getLogin(), "1234"),request);
         }
 
     }
@@ -231,9 +235,15 @@ public class UserController {
      */
     @RequiredRoles({"user"})
     @GetMapping("/message/{senderId}/{receiverId}")
-    public Result<List<PrivateMessageVO>> getConversation(@PathVariable Long senderId, @PathVariable Long receiverId) {
+    public Result<List<PrivateMessageVO>> getConversations(@PathVariable Long senderId, @PathVariable Long receiverId) {
         log.info("获取用户 {} 和用户 {} 的聊天记录", senderId, receiverId);
-        List<PrivateMessageVO> conversation = userService.getConversation(senderId, receiverId);
+        List<PrivateMessageVO> conversation = userService.getConversations(senderId, receiverId);
+        return Result.success(conversation);
+    }
+
+    @GetMapping("/{senderId}/{receiverId}")
+    public Result<List<ChatMessage>> getConversation(@PathVariable Long senderId, @PathVariable Long receiverId) {
+        List<ChatMessage> conversation = userService.getConversation(senderId, receiverId);
         return Result.success(conversation);
     }
 }

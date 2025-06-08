@@ -22,7 +22,7 @@ public class GetHttpSessionConfig extends ServerEndpointConfig.Configurator{
         if(sec.getUserProperties()==null){
             log.info("sec.getUserProperties() = null");
         }
-        HttpSession httpSession = (HttpSession) request.getHttpSession();
+        HttpSession httpSession = (HttpSession)request.getHttpSession();
         sec.getUserProperties().put(HttpSession.class.getName(), httpSession);
     }
 }

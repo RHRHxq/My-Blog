@@ -17,6 +17,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest().authenticated()
                 .and()
                 // 关闭 CSRF（如果是 RESTful 接口，可能需要关闭）
-                .csrf().disable();
+                .csrf().disable()
+                .sessionManagement()
+                .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.ALWAYS); // 始终创建会话
     }
 }

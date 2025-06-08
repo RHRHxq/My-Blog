@@ -17,6 +17,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.lang.reflect.Method;
 
 /**
@@ -83,8 +84,12 @@ public class  JwtTokenAdminInterceptor implements HandlerInterceptor {
                     return false;
                 }
 
+                // 将 userId 存入 HttpSession
+                HttpSession session = request.getSession();
+                session.setAttribute("userId", empId);
+
             } catch (Exception ex) {
-                //4、不通过，响应401状态码
+                //4、不通过，响应40
                 response.setStatus(401);
                 return false;
             }

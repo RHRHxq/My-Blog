@@ -141,9 +141,9 @@ public class UserServiceImpl implements UserService {
         userMapper.sendMessage(privateMessage);
     }
 
-    public List<PrivateMessageVO> getConversation(Long senderId, Long receiverId) {
+    public List<PrivateMessageVO> getConversations(Long senderId, Long receiverId) {
         log.info("获取私信");
-        List<PrivateMessageVO> conversation = userMapper.getConversation(senderId, receiverId);
+        List<PrivateMessageVO> conversation = userMapper.getConversations(senderId, receiverId);
         return conversation;
     }
 
@@ -151,5 +151,14 @@ public class UserServiceImpl implements UserService {
         log.info("比对用户信息");
         UserLoginDTO userLoginDTO = userMapper.getUser(userName);
         return userLoginDTO;
+    }
+
+    public void sendMessage(ChatMessage chatMessage) {
+        userMapper.insertMessage(chatMessage);
+    }
+
+    @Override
+    public List<ChatMessage> getConversation(Long senderId, Long receiverId) {
+        return userMapper.getConversation(senderId, receiverId);
     }
 }

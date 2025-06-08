@@ -77,8 +77,14 @@ public interface UserMapper {
     void sendMessage(PrivateMessage privateMessage);
 
     @Select("select * from private_message where (sender_id = #{senderId} and receiver_id = #{receiverId}) or (sender_id = #{receiverId} and receiver_id = #{senderId})")
-    List<PrivateMessageVO> getConversation(Long senderId, Long receiverId);
+    List<PrivateMessageVO> getConversations(Long senderId, Long receiverId);
 
     @Select("select * from user where username = #{userName}")
     UserLoginDTO getUser(String userName);
+
+    @Insert("INSERT INTO chat_messages (sender_id, receiver_id, message) VALUES (#{senderId}, #{receiverId}, #{message})")
+    void insertMessage(ChatMessage chatMessage);
+
+    @Select("SELECT * FROM chat_messages WHERE (sender_id = #{senderId} AND receiver_id = #{receiverId}) OR (sender_id = #{receiverId} AND receiver_id = #{senderId}) ORDER BY create_time ASC")
+    List<ChatMessage> getConversation(Long senderId, Long receiverId);
 }

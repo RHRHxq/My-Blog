@@ -1,10 +1,7 @@
 package com.myblog.service;
 
 import com.myblog.dto.*;
-import com.myblog.entity.Article;
-import com.myblog.entity.PrivateMessage;
-import com.myblog.entity.User;
-import com.myblog.entity.UserFollow;
+import com.myblog.entity.*;
 import com.myblog.vo.PrivateMessageVO;
 import com.myblog.vo.SystemMessageVO;
 import com.myblog.vo.UserFollowVO;
@@ -55,8 +52,11 @@ public interface UserService {
 
     void sendMessage(PrivateMessage privateMessage);
 
-    List<PrivateMessageVO> getConversation(Long senderId, Long receiverId);
+    List<PrivateMessageVO> getConversations(Long senderId, Long receiverId);
 
 
     UserLoginDTO getUser(String userName);
+
+    void sendMessage(ChatMessage chatMessage);
+    List<ChatMessage> getConversation(Long senderId, Long receiverId);
 }
